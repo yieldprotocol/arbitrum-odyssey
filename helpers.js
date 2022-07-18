@@ -1,5 +1,5 @@
 require("isomorphic-fetch");
-const { GRAPH_ENDPOINT, DEMO_START_TIMESTAMP } = require("./constants");
+const { GRAPH_ENDPOINT } = require("./constants");
 
 const getRes = async (query) => {
   const res = await fetch(GRAPH_ENDPOINT, {
