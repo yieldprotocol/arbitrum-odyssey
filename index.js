@@ -4,6 +4,7 @@ const {
   LADLE,
   START_TIMESTAMP,
   END_TIMESTAMP,
+  ONE_DAY,
 } = require("./constants");
 const { getRes } = require("./helpers");
 
@@ -26,7 +27,9 @@ async function getEligibleUsers() {
     do {
       const query = `
     {
-      trades(first:1000, where:{amountFYToken_lte:"-${AMOUNT_THRESHOLD}", from:"${LADLE}", timestamp_gte:${timestamp}}, orderDirection:asc, orderBy:timestamp) {
+      trades(first:1000, where:{amountFYToken_lte:"-${AMOUNT_THRESHOLD}", from:"${LADLE}", timestamp_gte:${timestamp}, timestamp_lt: ${
+        timestamp + ONE_DAY
+      }}, orderDirection:asc, orderBy:timestamp) {
         to
         timestamp
       }
@@ -57,7 +60,9 @@ async function getEligibleUsers() {
     do {
       const query = `
     {
-      trades(first:1000, where:{amountBaseToken_lte:"-${AMOUNT_THRESHOLD}", timestamp_gte:${timestamp}}, orderDirection:asc, orderBy:timestamp) {
+      trades(first:1000, where:{amountBaseToken_lte:"-${AMOUNT_THRESHOLD}", timestamp_gte:${timestamp}, timestamp_lt: ${
+        timestamp + ONE_DAY
+      }}, orderDirection:asc, orderBy:timestamp) {
         to
         timestamp
       }
@@ -88,7 +93,9 @@ async function getEligibleUsers() {
     do {
       const query = `
     {
-      liquidities(first:1000, where:{amountStrategyTokens_gte:"${AMOUNT_THRESHOLD}", from: "${ZERO_ADDRESS}", timestamp_gte:${timestamp}}, orderDirection:asc, orderBy:timestamp) {
+      liquidities(first:1000, where:{amountStrategyTokens_gte:"${AMOUNT_THRESHOLD}", from: "${ZERO_ADDRESS}", timestamp_gte:${timestamp}, timestamp_lt: ${
+        timestamp + ONE_DAY
+      }}, orderDirection:asc, orderBy:timestamp) {
         to
         timestamp
       }
