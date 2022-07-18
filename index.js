@@ -1,5 +1,3 @@
-require("dotenv").config();
-const _ = require("lodash");
 const {
   AMOUNT_THRESHOLD,
   ZERO_ADDRESS,
@@ -39,9 +37,12 @@ async function getEligibleUsers() {
         data: { trades },
       } = await getRes(query);
 
+      trades.forEach(
+        (trade) => trade.timestamp <= END_TIMESTAMP && borrowers.add(trade.to)
+      );
+
       // use the latest timestamp as the new timestamp to query
       timestamp = trades[trades.length - 1].timestamp;
-      trades.forEach((trade) => borrowers.add(trade.to));
     } while (timestamp <= END_TIMESTAMP);
 
     return borrowers;
@@ -67,9 +68,12 @@ async function getEligibleUsers() {
         data: { trades },
       } = await getRes(query);
 
+      trades.forEach(
+        (trade) => trade.timestamp <= END_TIMESTAMP && lenders.add(trade.to)
+      );
+
       // use the latest timestamp as the new timestamp to query
       timestamp = trades[trades.length - 1].timestamp;
-      trades.forEach((trade) => lenders.add(trade.to));
     } while (timestamp <= END_TIMESTAMP);
 
     return lenders;
@@ -95,9 +99,12 @@ async function getEligibleUsers() {
         data: { liquidities },
       } = await getRes(query);
 
+      liquidities.forEach(
+        (liq) => liq.timestamp <= END_TIMESTAMP && liqProviders.add(liq.to)
+      );
+
       // use the latest timestamp as the new timestamp to query
       timestamp = liquidities[liquidities.length - 1].timestamp;
-      liquidities.forEach((liq) => liqProviders.add(liq.to));
     } while (timestamp <= END_TIMESTAMP);
 
     return liqProviders;
