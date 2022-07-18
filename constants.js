@@ -1,6 +1,6 @@
 // const GRAPH_ENDPOINT = "https://api.thegraph.com/subgraphs/name/yieldprotocol/v2-arbitrum";
 const GRAPH_ENDPOINT =
-  "https://api.thegraph.com/subgraphs/id/QmZ4jW3m36hFcyMzs7RymujV27dG3dsnQyfe8kKFkuoX9S";
+  "https://api.thegraph.com/subgraphs/name/yieldprotocol/v2-arbitrum";
 
 const AMOUNT_THRESHOLD = "40";
 
