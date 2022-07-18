@@ -1,4 +1,3 @@
-// const GRAPH_ENDPOINT = "https://api.thegraph.com/subgraphs/name/yieldprotocol/v2-arbitrum";
 const GRAPH_ENDPOINT =
   "https://api.thegraph.com/subgraphs/name/yieldprotocol/v2-arbitrum";
 
@@ -8,9 +7,6 @@ const AMOUNT_THRESHOLD = "40";
 const START_TIMESTAMP = 1656288000;
 // 2022-06-29T23:59:00 GMT
 const END_TIMESTAMP = 1656547140;
-
-// const DEMO_START_TIMESTAMP = "1646382907";
-// const DEMO_END_TIMESTAMP = "1646691769";
 
 const LADLE = "0x16e25cf364cecc305590128335b8f327975d0560";
 const MAINNET_LADLE = "0x6cB18fF2A33e981D1e38A663Ca056c0a5265066A";
