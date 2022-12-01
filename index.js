@@ -4,6 +4,7 @@ const {
   END_TIMESTAMP,
   ONE_DAY,
   STRATEGIES,
+  AMOUNT_THRESHOLD,
 } = require("./constants");
 const { getRes } = require("./helpers");
 
@@ -35,6 +36,7 @@ async function getEligibleUsers() {
           from
           to
           timestamp
+          amountStrategyTokens
         }
     }
     `;
@@ -44,7 +46,10 @@ async function getEligibleUsers() {
       } = await getRes(query);
 
       liquidities.forEach((liq) => {
-        if (liq.timestamp <= END_TIMESTAMP) {
+        if (
+          liq.timestamp <= END_TIMESTAMP &&
+          liq.amountStrategyTokens > AMOUNT_THRESHOLD
+        ) {
           liqProviders.add(liq.to);
           liq.from !== ZERO_ADDRESS && liqProviders.add(liq.from);
         }

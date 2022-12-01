@@ -16,6 +16,8 @@ const STRATEGIES = [
   "0x92a5b31310a3ed4546e0541197a32101fcfbd5c8", // YSUSDC6MMS
 ];
 
+const AMOUNT_THRESHOLD = 40; // 40 DAI/USDC strategy tokens as a proxy for 50 USD
+
 module.exports = {
   GRAPH_ENDPOINT,
   START_TIMESTAMP,
@@ -23,4 +25,5 @@ module.exports = {
   ZERO_ADDRESS,
   ONE_DAY,
   STRATEGIES,
+  AMOUNT_THRESHOLD,
 };
