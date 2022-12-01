@@ -63,7 +63,7 @@ async function getEligibleUsers() {
   // write to dai strat csv
   writer
     .writeRecords(
-      [liqProviders.values()].map((lp) => ({
+      [...liqProviders.values()].map((lp) => ({
         account: lp.account,
       }))
     )
