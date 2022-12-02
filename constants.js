@@ -1,8 +1,8 @@
 const GRAPH_ENDPOINT =
   "https://api.thegraph.com/subgraphs/name/yieldprotocol/v2-arbitrum";
 
-const START_TIMESTAMP = 1644393600;
-const END_TIMESTAMP = 1659706877;
+const START_TIMESTAMP = 1670400000; // 12/7 00:00:00 UTC
+const END_TIMESTAMP = 1671609600; // 12/21 00:00:00 UTC
 
 // one day in seconds
 const ONE_DAY = 24 * 60 * 60;
