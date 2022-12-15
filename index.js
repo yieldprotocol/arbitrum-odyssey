@@ -9,13 +9,15 @@ const {
 const { getRes } = require("./helpers");
 
 // csv writing data
-const CSV_PATH = "data.csv";
+const CSV_PATH = `${START_TIMESTAMP}_${END_TIMESTAMP}_${AMOUNT_THRESHOLD}_threshold.csv`;
 const CSV_HEADER = [{ id: "account", title: "Account" }];
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 const csvWriter = createCsvWriter({
   path: CSV_PATH,
   header: CSV_HEADER,
 });
+
+const uniqueOnly = true;
 
 async function getEligibleUsers() {
   // proxy for borrowing: when the pool trades from fyToken to base (above threshold) and then base is transferred from ladle to user
@@ -53,10 +55,9 @@ async function getEligibleUsers() {
 
   // proxy for lending: some amount of base (above threshold) was traded for fyToken then transferred to user
   const _getLenders = async () => {
+    
     let timestamp = START_TIMESTAMP;
-
     const lenders = new Set();
-
     do {
       const query = `
     {
@@ -125,9 +126,11 @@ async function getEligibleUsers() {
     (account) => ({ account })
   );
 
+  const uniqueUsers = [...new Set(allUsers)]
+
   // write to csv
   csvWriter
-    .writeRecords(allUsers)
+    .writeRecords(uniqueOnly ? uniqueUsers: allUsers)
     .then(() => console.log("The CSV file was written successfully"));
 }
 
