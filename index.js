@@ -88,9 +88,7 @@ async function getEligibleUsers() {
   // get instances where strategy tokens were transferred to user
   const _getLiqProviders = async () => {
     let timestamp = START_TIMESTAMP;
-
     const liqProviders = new Set();
-
     do {
       const query = `
     {
