@@ -1,138 +1,98 @@
-const {
-  ZERO_ADDRESS,
-  START_TIMESTAMP,
-  END_TIMESTAMP,
-  ONE_DAY,
-  RPC_ENDPOINT,
-  DAI_STRAT,
-  USDC_STRAT,
-  AFFECTED_BLOCK,
-} = require("./constants");
+const { AFFECTED_BLOCK } = require("./constants");
 const { getRes } = require("./helpers");
-const { Contract, ethers } = require("ethers");
-const abi = require("./contracts/abis/Strategy.json");
-const { formatUnits } = require("ethers/lib/utils");
-const { JsonRpcProvider } = require("@ethersproject/providers");
 
 // csv writing data
-const DAI_STRAT_CSV_PATH = "ARBITRUM_YSDAI6MJD.csv";
-const USDC_STRAT_CSV_PATH = "ARBITRUM_YSUSDC6MJD.csv";
-const CSV_HEADER = [
+const path = "data.csv";
+const header = [
+  { id: "strategyAddr", title: "Strategy Address" },
   { id: "account", title: "Account" },
   { id: "balance", title: "Balance" },
 ];
 const createCsvWriter = require("csv-writer").createObjectCsvWriter;
 
-// YSDAI6MJD
-const daiStratWriter = createCsvWriter({
-  path: DAI_STRAT_CSV_PATH,
-  header: CSV_HEADER,
+const writer = createCsvWriter({
+  path,
+  header,
 });
 
-// YSUSDC6MJD
-const usdcStratWriter = createCsvWriter({
-  path: USDC_STRAT_CSV_PATH,
-  header: CSV_HEADER,
-});
+async function getStratHolders() {
+  let numAccounts = 0;
+  const stratHolders = new Set();
 
-async function getEligibleUsers() {
-  const _getLiqProviders = async () => {
-    let timestamp = START_TIMESTAMP;
+  let skip = 0;
 
-    const liqProviders = new Set();
-
-    do {
-      const query = `
-      {
-        liquidities(first:1000, where:{strategy_in:
-          ["0xe7214af14bd70f6aac9c16b0c1ec9ee1ccc7efda", 
-          "0xdc705fb403dbb93da1d28388bc1dc84274593c11"], 
-           timestamp_gte:${timestamp}, from:"${ZERO_ADDRESS}", timestamp_lt: ${
-        timestamp + ONE_DAY
-      }}, orderDirection:asc, orderBy:timestamp) {
-          to
-          timestamp
-        }
+  do {
+    // get all account balances for all strategies except for frax (unaffected)
+    const query = `
+  {
+    accountBalances(
+      block: {number: ${AFFECTED_BLOCK}}
+      where: {asset_in: [
+        "0x7acfe277ded15caba6a8da2972b1eb93fe1e2ccd",
+        "0xa6dbc40c75037895dee8d2415f1ce9e0fb08cf49",
+        "0x1144e14e9b0aa9e181342c7e6e0a9badb4ced295",
+        "0x9ca2a34ea52bc1264d399aca042c0e83091feece",
+        "0xfbc322415cbc532b54749e31979a803009516b5d",
+        "0x59e9db2c8995ceeaf6a9ad0896601a5d3289444e",
+        "0x8e8d6ab093905c400d583efd37fbeeb1ee1c0c39",
+        "0x5dd6dcae25dffa0d46a04c9d99b4875044289fb2",
+        "0xcf30a5a994f9ace5832e30c138c9697cda5e1247",
+        "0x11f30c6b1173ec6e0a6d622c8f17eef3dc593764",
+        "0x831df23f7278575ba0b136296a285600cd75d076",
+        "0xb268e2c85861b74ec75fe728ae40d9a2308ad9bb",
+        "0x428e229ac5bc52a2e07c379b2f486fefefd674b1",
+        "0xf708005cee17b2c5fe1a01591e32ad6183a12eae"
+      ], balance_gt: "0"}
+      skip: ${skip}
+      first: 1000
+    ) {
+      balance
+      account {
+        id
+      }
+      asset {
+        name
+        id
+      }
     }
+  }
     `;
 
-      const {
-        data: { liquidities },
-      } = await getRes(query);
+    const { data } = await getRes(query);
+    const accountBalances = data ? data.accountBalances : null;
 
-      liquidities.forEach(
-        (liq) => liq.timestamp <= END_TIMESTAMP && liqProviders.add(liq.to)
-      );
+    if (accountBalances) {
+      accountBalances.forEach((a) => {
+        const {
+          balance,
+          account: { id: account },
+          asset: { name: strategyName, id: strategyAddr },
+        } = a;
 
-      // use the latest timestamp as the new timestamp to query
-      timestamp = liquidities[liquidities.length - 1].timestamp;
-      console.log("size", liqProviders.size);
-    } while (timestamp < END_TIMESTAMP);
+        stratHolders.add({
+          strategyAddr,
+          strategyName,
+          account,
+          balance,
+        });
+      });
+    }
 
-    const provider = new JsonRpcProvider(RPC_ENDPOINT);
-    const daiStrategy = new Contract(DAI_STRAT, abi, provider);
-    const usdcStrategy = new Contract(USDC_STRAT, abi, provider);
-    const daiDec = await daiStrategy.decimals();
-    const usdcDec = await usdcStrategy.decimals();
-
-    const balances = await Promise.all(
-      [...liqProviders.values()].map(async (lp) => {
-        // YSDAI6MJD
-        let daiStratBal;
-        try {
-          daiStratBal = await daiStrategy.balanceOf(lp, {
-            blockTag: AFFECTED_BLOCK - 1,
-          });
-        } catch (e) {
-          daiStratBal = ethers.constants.Zero;
-        }
-
-        // YSUSDC6MJD
-        let usdcStratBal;
-        try {
-          usdcStratBal = await usdcStrategy.balanceOf(lp, {
-            blockTag: AFFECTED_BLOCK - 1,
-          });
-        } catch (e) {
-          usdcStratBal = ethers.constants.Zero;
-        }
-
-        return {
-          account: lp,
-          daiStratBal: formatUnits(daiStratBal, daiDec),
-          usdcStratBal: formatUnits(usdcStratBal, usdcDec),
-        };
-      })
+    skip += 1000;
+    numAccounts += accountBalances ? accountBalances.length : 0;
+    console.log(
+      "🦄 ~ file: index.js:83 ~ getStratHolders ~ numAccounts:",
+      numAccounts
     );
+  } while (skip <= 10000); // tries to get first 10000ish accounts
 
-    return balances;
-  };
-
-  const liqProviders = await _getLiqProviders();
-
-  // write to dai strat csv
-  daiStratWriter
-    .writeRecords(
-      liqProviders
-        .filter((lp) => Number(lp.daiStratBal) !== 0)
-        .map((lp) => ({
-          account: lp.account,
-          balance: lp.daiStratBal,
-        }))
-    )
-    .then(() => console.log("The DAI CSV file was written successfully"));
-
-  // write to usdc strat csv
-  usdcStratWriter
-    .writeRecords(
-      liqProviders
-        .filter((lp) => Number(lp.usdcStratBal) !== 0)
-        .map((lp) => ({
-          account: lp.account,
-          balance: lp.usdcStratBal,
-        }))
-    )
-    .then(() => console.log("The USDC CSV file was written successfully"));
+  return stratHolders;
 }
 
-getEligibleUsers();
+const main = async () => {
+  writer
+    .writeRecords(await getStratHolders())
+    .then(() => console.log("The csv file was written successfully"));
+};
+
+main();
